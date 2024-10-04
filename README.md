@@ -68,7 +68,7 @@ Edit the script to add your API keys:
 
 ```python
 
-SHODAN_API_KEY = "your_actual_shodan_api_key"
+RAPIDAPI_KEY = "your_actual_RAPIDAPI_key"  
 GITHUB_API_KEY = "your_actual_github_api_key"
 SERPAPI_KEY = "your_actual_serpapi_key"
 
