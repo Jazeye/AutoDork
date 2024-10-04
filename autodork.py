@@ -1,122 +1,135 @@
-#!/usr/bin/env python3
-
 import requests
-from github import Github
-import shodan
 import argparse
-import os
 
-# Tool details
+# Constants for API keys
+RAPIDAPI_KEY = "1d256ab7f5mshf4e099388517e7dp1966ddjsn0af7bb19ba17 "  # Replace with your RapidAPI key
+GITHUB_API_KEY = "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"  # Replace with your GitHub API key
+SERPAPI_KEY = "4e3cb5483676200d6665504c1042597549f9f9c206e9c68b59a6e8fcb5cf2f15"  # Replace with your SerpAPI key
+
+
+# Tool Information
 TOOL_NAME = "AutoDork"
-VERSION = "0.1"
-DEVELOPER = "Developed by Jaseel"
+TOOL_VERSION = "0.1"
+DEVELOPER = "Jaseel"
 
-# API Keys (Replace with your own)
-SHODAN_API_KEY = "3llhwb3WazzNSamxKr8gWiDUtnjd2OuY"
-GITHUB_API_KEY = "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"
-SERPAPI_KEY = "4e3cb5483676200d6665504c1042597549f9f9c206e9c68b59a6e8fcb5cf2f15"
-
-# Initialize Shodan and GitHub
-shodan_api = shodan.Shodan(SHODAN_API_KEY)
-github_api = Github(GITHUB_API_KEY)
-
-# Color helper for terminal output
-def print_colored(text, color="default"):
+# Function to print colored output
+def print_colored(message, color):
     colors = {
-        "default": "\033[0m",
+        "red": "\033[91m",
         "green": "\033[92m",
         "yellow": "\033[93m",
-        "red": "\033[91m",
         "blue": "\033[94m",
+        "end": "\033[0m",
     }
-    print(f"{colors.get(color, colors['default'])}{text}{colors['default']}")
+    print(f"{colors[color]}{message}{colors['end']}")
 
-# Subdomain Enumeration
+# Function to print the ASCII banner
+def print_banner():
+    banner = rf"""
+                _        _____             _    
+     /\        | |      |  __ \           | |   
+    /  \  _   _| |_ ___ | |  | | ___  _ __| | __
+   / /\ \| | | | __/ _ \| |  | |/ _ \| '__| |/ /
+  / ____ \ |_| | || (_) | |__| | (_) | |  |   < 
+ /_/    \_\__,_|\__\___/|_____/ \___/|_|  |_|\_\
+                                                    
+                v{TOOL_VERSION} by {DEVELOPER}
+    """
+    print_colored(banner, "green")
+
+# Subdomain Enumeration using RapidAPI
 def subdomain_enumeration(domain):
-    subdomains = []
+    url = f"https://subdomain-scan1.p.rapidapi.com/?domain={domain}"
+    headers = {
+        "x-rapidapi-host": "subdomain-scan1.p.rapidapi.com",
+        "x-rapidapi-key": RAPIDAPI_KEY,
+    }
     try:
-        response = requests.get(f"https://api.sublist3r.com/search.php?domain={domain}")
-        subdomains = response.json()
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            data = response.json()
+            # Check if data is a list
+            if isinstance(data, list):
+                return data  # If data is a list, return it directly
+            else:
+                print_colored("Unexpected response format: expected a list.", "red")
+                return []
+        else:
+            print_colored(f"Error in subdomain enumeration: {response.text}", "red")
+            return []
     except Exception as e:
         print_colored(f"Error in subdomain enumeration: {e}", "red")
-    return subdomains
+        return []
 
-# Google Dorking (using SerpAPI)
-def google_dorking(dork_query):
-    params = {
-        "engine": "google",
-        "q": dork_query,
-        "api_key": SERPAPI_KEY
-    }
+# Google Dorking
+def google_dorking(query):
+    url = f"https://serpapi.com/search.json?q={query}&api_key={SERPAPI_KEY}"
     try:
-        response = requests.get("https://serpapi.com/search", params=params)
-        return response.json().get("organic_results", [])
+        response = requests.get(url)
+        if response.status_code == 200:
+            data = response.json()
+            # Extract and return search results
+            results = data.get("organic_results", [])
+            return [result.get("link") for result in results if "link" in result]
+        else:
+            print_colored(f"Error in Google Dorking: {response.text}", "red")
+            return []
     except Exception as e:
         print_colored(f"Error in Google Dorking: {e}", "red")
         return []
 
 # GitHub Dorking
 def github_dorking(query):
+    url = f"https://api.github.com/search/code?q={query}"
+    headers = {
+        "Authorization": f"token {GITHUB_API_KEY}",  # Use the Authorization header
+    }
     try:
-        results = github_api.search_code(query)
-        return results
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            data = response.json()
+            # Extract and return repository URLs
+            return [item["html_url"] for item in data.get("items", [])]
+        else:
+            print_colored(f"Error in GitHub Dorking: {response.text}", "red")
+            return []
     except Exception as e:
         print_colored(f"Error in GitHub Dorking: {e}", "red")
         return []
 
-# Shodan Dorking
-def shodan_dorking(query):
-    try:
-        results = shodan_api.search(query)
-        return results.get('matches', [])
-    except shodan.APIError as e:
-        print_colored(f"Error in Shodan Dorking: {e}", "red")
-        return []
-
 # Main function
 def main():
-    parser = argparse.ArgumentParser(description=f"{TOOL_NAME} - A dorking tool by {DEVELOPER}")
-    parser.add_argument("--domain", help="Domain for subdomain enumeration", required=True)
-    parser.add_argument("--google-dork", help="Google Dorking query", required=True)
-    parser.add_argument("--github-dork", help="GitHub Dorking query (e.g., 'password')", required=True)
-    parser.add_argument("--shodan-dork", help="Shodan Dorking query (e.g., 'Apache')", required=True)
-    parser.add_argument("--version", action="version", version=f"{TOOL_NAME} {VERSION}")
-    
+    print_banner()  # Print the ASCII banner
+
+    parser = argparse.ArgumentParser(description="Autodork Tool")
+    parser.add_argument("--domain", type=str, required=True, help="Domain to enumerate subdomains.")
+    parser.add_argument("--google-dork", type=str, required=False, help="Google dork query.")
+    parser.add_argument("--github-dork", type=str, required=False, help="GitHub dork query.")
+
     args = parser.parse_args()
 
-    print_colored(f"\n[+] {TOOL_NAME} {VERSION} - {DEVELOPER}\n", "blue")
-
-    # Subdomain Enumeration
-    print_colored("\n[+] Starting Subdomain Enumeration...", "yellow")
+    # Subdomain enumeration
+    print_colored(f"Enumerating subdomains for: {args.domain}", "blue")
     subdomains = subdomain_enumeration(args.domain)
-    if subdomains:
-        print_colored("[+] Subdomains found:", "green")
-        for sub in subdomains:
-            print(f"- {sub}")
+    print_colored("Subdomains found:", "yellow")
+    for sub in subdomains:
+        print(f" - {sub}")
 
     # Google Dorking
-    print_colored("\n[+] Starting Google Dorking...", "yellow")
-    google_results = google_dorking(args.google_dork)
-    if google_results:
-        print_colored("[+] Google Dorking results:", "green")
-        for result in google_results:
-            print(f"- {result.get('title')}: {result.get('link')}")
+    if args.google_dork:
+        print_colored(f"Running Google Dork: {args.google_dork}", "blue")
+        google_results = google_dorking(args.google_dork)
+        print_colored("Google Dork Results:", "yellow")
+        for link in google_results:
+            print(f" - {link}")
 
     # GitHub Dorking
-    print_colored("\n[+] Starting GitHub Dorking...", "yellow")
-    github_results = github_dorking(args.github_dork)
-    if github_results:
-        print_colored("[+] GitHub Dorking results:", "green")
-        for result in github_results:
-            print(f"- {result.repository.full_name}: {result.html_url}")
-
-    # Shodan Dorking
-    print_colored("\n[+] Starting Shodan Dorking...", "yellow")
-    shodan_results = shodan_dorking(args.shodan_dork)
-    if shodan_results:
-        print_colored("[+] Shodan Dorking results:", "green")
-        for result in shodan_results:
-            print(f"- IP: {result['ip_str']} | Port: {result['port']}")
+    if args.github_dork:
+        print_colored(f"Running GitHub Dork: {args.github_dork}", "blue")
+        github_results = github_dorking(args.github_dork)
+        print_colored("GitHub Dork Results:", "yellow")
+        for link in github_results:
+            print(f" - {link}")
 
 if __name__ == "__main__":
     main()
