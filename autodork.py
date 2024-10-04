@@ -2,9 +2,9 @@ import requests
 import argparse
 
 # Constants for API keys
-RAPIDAPI_KEY = "1d256ab7f5mshf4e099388517e7dp1966ddjsn0af7bb19ba17 "  # Replace with your RapidAPI key
-GITHUB_API_KEY = "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"  # Replace with your GitHub API key
-SERPAPI_KEY = "4e3cb5483676200d6665504c1042597549f9f9c206e9c68b59a6e8fcb5cf2f15"  # Replace with your SerpAPI key
+RAPIDAPI_KEY = "api token"  # Replace with your RapidAPI key
+GITHUB_API_KEY = "api token"  # Replace with your GitHub API key
+SERPAPI_KEY = "api token"  # Replace with your SerpAPI key
 
 
 # Tool Information
