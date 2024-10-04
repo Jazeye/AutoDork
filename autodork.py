@@ -13,7 +13,7 @@ DEVELOPER = "Developed by Jaseel"
 
 # API Keys (Replace with your own)
 SHODAN_API_KEY = "3llhwb3WazzNSamxKr8gWiDUtnjd2OuY"
-GITHUB_API_KEY = ""
+GITHUB_API_KEY = "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"
 SERPAPI_KEY = "4e3cb5483676200d6665504c1042597549f9f9c206e9c68b59a6e8fcb5cf2f15"
 
 # Initialize Shodan and GitHub
