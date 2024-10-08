@@ -82,7 +82,8 @@ After setting up the API keys and installing the required modules, run the scrip
 
 python3 autodork.py
 
-example : python3 [autodork.py](http://autodork.py/) --domain example[.com](http://vulnweb.com/) --google-dork "inurl:admin" --github-dork "password filename:.env"
+example : python3 autodork.py --domain example.com --google-dork "site:example.com inurl:admin" --github-dork "password filename:.env"
+
 ```
 
 ## Notes
