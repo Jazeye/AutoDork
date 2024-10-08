@@ -8,7 +8,7 @@ A Python tool for automated dorking using GitHub, SerpAPI, and RapidAPI.
 
 ```bash
 
-git clone <url_of_the_repository>
+git clone https://github.com/Jazeye/AutoDork.git
 cd AutoDork
 
 ```
